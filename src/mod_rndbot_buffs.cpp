@@ -243,7 +243,7 @@ bool IsIdleRndbot(Player* bot, PlayerbotAI* botAI)
 bool IsEligibleTarget(Player* bot, Player* target)
 {
     if (!target || target == bot || !target->GetSession() ||
-        target->GetSession()->IsBot() || !target->IsInWorld() ||
+        target->GetSession()->IsHeadless() || !target->IsInWorld() ||
         !target->IsAlive() || target->IsGameMaster() ||
         target->IsDuringRemoveFromWorld() || target->IsBeingTeleported())
     {
@@ -324,7 +324,7 @@ public:
     void OnPlayerAfterUpdate(Player* player, uint32 diff) override
     {
         if (!config.enabled || !player || !player->GetSession() ||
-            !player->GetSession()->IsBot())
+            !player->GetSession()->IsHeadless())
         {
             return;
         }
@@ -353,7 +353,7 @@ public:
     void OnPlayerLogout(Player* player) override
     {
         if (player)
-        {   
+        {
             std::lock_guard<std::mutex> guard(botCheckTimers_mutex);
             botCheckTimers.erase(player->GetGUID().GetCounter());
         }
