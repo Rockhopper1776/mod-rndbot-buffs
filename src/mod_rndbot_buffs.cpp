@@ -14,6 +14,7 @@
 #include "Playerbots.h"
 #include "Random.h"
 #include "ScriptMgr.h"
+#include "SpellAuras.h"
 #include "WorldSession.h"
 
 #include <algorithm>
@@ -33,6 +34,7 @@ struct RndbotBuffConfig
     float minimumManaPct = 35.0f;
     bool sameFactionOnly = true;
     bool skipPlayersInCombat = true;
+    uint32 refreshBelowSec = 0;
     bool skipBattlegrounds = true;
     bool enablePriestBuffs = true;
     bool enableMageBuffs = true;
@@ -56,6 +58,7 @@ void LoadConfig()
         sConfigMgr->GetOption<float>("RndbotBuffs.MinimumManaPct", 35.0f), 0.0f, 100.0f);
     config.sameFactionOnly = sConfigMgr->GetOption<bool>("RndbotBuffs.SameFactionOnly", true);
     config.skipPlayersInCombat = sConfigMgr->GetOption<bool>("RndbotBuffs.SkipPlayersInCombat", true);
+    config.refreshBelowSec = sConfigMgr->GetOption<uint32>("RndbotBuffs.RefreshBelowSec", 0);
     config.skipBattlegrounds = sConfigMgr->GetOption<bool>("RndbotBuffs.SkipBattlegrounds", true);
     config.enablePriestBuffs = sConfigMgr->GetOption<bool>("RndbotBuffs.Classes.Priest", true);
     config.enableMageBuffs = sConfigMgr->GetOption<bool>("RndbotBuffs.Classes.Mage", true);
@@ -77,9 +80,12 @@ bool HasAnyAura(
     Player* target,
     std::initializer_list<char const*> auraNames)
 {
+    // An aura about to run out does not count, so it gets refreshed.
+    int32 const refreshBelowMs = int32(config.refreshBelowSec * IN_MILLISECONDS);
     for (char const* auraName : auraNames)
     {
-        if (botAI->HasAura(auraName, target))
+        Aura* aura = botAI->GetAura(auraName, target);
+        if (aura && (aura->GetDuration() < 0 || aura->GetDuration() >= refreshBelowMs))
             return true;
     }
 

@@ -51,6 +51,14 @@ RndbotBuffs.SameFactionOnly = 1
 RndbotBuffs.SkipPlayersInCombat = 1
 
 #
+#    RndbotBuffs.RefreshBelowSec
+#        Recast a buff the player already has once it has fewer than this many
+#        seconds left. 0 only casts buffs the player does not have.
+#        Default: 0
+#
+RndbotBuffs.RefreshBelowSec = 0
+
+#
 #    RndbotBuffs.SkipBattlegrounds
 #        Disable courtesy buffs in battlegrounds and arenas.
 #        Default: 1
