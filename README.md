@@ -63,8 +63,14 @@ settings and comments.
 
 ## Compatibility target
 
-The module was written against the public `master` version of mod-playerbots
-and the corresponding `Playerbot` core APIs available on June 14, 2026.
+The module targets the `Playerbot` branch of mod-playerbots/azerothcore-wotlk
+and the corresponding `master` version of mod-playerbots.
+
+The core must provide `WorldSession::IsHeadless()`, which replaced
+`WorldSession::IsBot()` in the
+[September 23, 2026 core update](https://github.com/mod-playerbots/azerothcore-wotlk/commit/d03021d845b21fb1fbba093c8e15c1ce5746911b).
+Older core revisions that expose only `IsBot()` are not compatible with this
+version of the module. Use matching core and mod-playerbots revisions.
 
 ## License
 
