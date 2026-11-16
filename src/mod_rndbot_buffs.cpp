@@ -114,45 +114,51 @@ bool TryCastBuff(
     return true;
 }
 
-bool HasPaladinBlessing(PlayerbotAI* botAI, Player* target)
-{
-    return HasAnyAura(
-        botAI,
-        target,
-        {
-            "blessing of kings",
-            "greater blessing of kings",
-            "blessing of might",
-            "greater blessing of might",
-            "blessing of wisdom",
-            "greater blessing of wisdom",
-            "blessing of sanctuary",
-            "greater blessing of sanctuary"
-        });
-}
-
 bool TryCastPaladinBuff(PlayerbotAI* botAI, Player* target)
 {
-    if (HasPaladinBlessing(botAI, target))
-        return false;
-
-    if (TryCastBuff(
-            botAI,
-            target,
-            "blessing of kings",
-            { "blessing of kings", "greater blessing of kings" }))
-    {
-        return true;
-    }
-
     bool const targetIsCaster = PlayerbotAI::IsCaster(target, true);
-    char const* preferredSpell = targetIsCaster ? "blessing of wisdom" : "blessing of might";
+    bool const targetIsTank = PlayerbotAI::IsTank(target, true);
+    char const* preferredGreaterSpell = targetIsCaster ? "greater blessing of wisdom"
+                           : targetIsTank   ? "greater blessing of sanctuary"
+                                            : "greater blessing of might";
+    char const* preferredSpell = targetIsCaster ? "blessing of wisdom"
+                           : targetIsTank   ? "blessing of sanctuary"
+                                            : "blessing of might";
+    char const* fallbackGreaterSpell = targetIsCaster ? "greater blessing of might" : "greater blessing of wisdom";
     char const* fallbackSpell = targetIsCaster ? "blessing of might" : "blessing of wisdom";
 
-    if (TryCastBuff(botAI, target, preferredSpell, { preferredSpell }))
-        return true;
+    struct BuffPair {
+        char const* greater;
+        char const* normal;
+    };
 
-    return TryCastBuff(botAI, target, fallbackSpell, { fallbackSpell });
+    BuffPair const buffPriorities[] = {
+        { preferredGreaterSpell, preferredSpell },
+        { "greater blessing of kings", "blessing of kings" },
+        { fallbackGreaterSpell, fallbackSpell }
+    };
+
+    for (BuffPair const& pair : buffPriorities)
+    {
+        if (botAI->HasAura(pair.greater, target, /*maxStack=*/false, /*checkIsOwner=*/true) ||
+            botAI->HasAura(pair.normal, target, /*maxStack=*/false, /*checkIsOwner=*/true))
+        {
+            return true;
+        }
+
+        if (botAI->HasAura(pair.greater, target))
+        {
+            continue;
+        }
+
+        if (TryCastBuff(botAI, target, pair.greater, { pair.greater }) ||
+            TryCastBuff(botAI, target, pair.normal, { pair.greater, pair.normal }))
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool TryCastClassBuff(PlayerbotAI* botAI, Player* target)
